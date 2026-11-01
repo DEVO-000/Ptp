@@ -1,0 +1,33 @@
+name: build-apk
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Системные зависимости buildozer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y automake libtool pkg-config zlib1g-dev \
+            libncurses5-dev libffi-dev libssl-dev lld ccache
+      - name: buildozer
+        run: |
+          pip install buildozer cython
+          cd android-app
+          buildozer -y android debug
+      - name: APK в артефакты
+        uses: actions/upload-artifact@v4
+        with:
+          name: p2p-messenger-apk
+          path: android-app/bin/*.apk
+          if-no-files-found: error
